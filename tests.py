@@ -23,12 +23,14 @@ def login_selenium(username, password):
     google_login_password = driver.find_element(By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')
     google_login_password.send_keys(password)
     next_login = driver.find_element(By.XPATH, '//*[@id="passwordNext"]/div/button')
+    time.sleep(n)
     next_login.click()
     time.sleep(2)
     driver.maximize_window()
+    time.sleep(2)
     select_element = driver.find_element(By.XPATH, '//*[@id="sources"]')
     select = Select(select_element)
-    select.select_by_value("387") #sorce id
+    select.select_by_value("387")
     time.sleep(2)
     apply_source_button = driver.find_element(By.XPATH, '//*[@id="applySource"]')
     apply_source_button.click()
@@ -37,49 +39,39 @@ def login_selenium(username, password):
     driver.implicitly_wait(10)
     select_element_type = driver.find_element(By.XPATH, '//*[@id="metadataSelect"]')
     select_el = Select(select_element_type)
-    select_el.select_by_index(3) #class id from 1
-    time.sleep(10)
+    select_el.select_by_index(2)
+    time.sleep(20)
     listing_rule_commissions = driver.find_element(By.XPATH, '//*[@id="nav-home"]/div/table/tbody/tr[27]/td[4]/div/span')
-    driver.implicitly_wait(30)
     listing_rule_commissions.click()
+    time.sleep(2)
     listing_rule_commissions = driver.find_element(By.XPATH,
                                                    '//*[@id="rulesAutocomplete"]')
     listing_rule_commissions.click()
     select_element_rule = driver.find_element(By.XPATH, '//*[@id="foo"]')
     select_rule = Select(select_element_rule)
-    select_rule.select_by_index(1) #rule id from 0
+    select_rule.select_by_index(2)
+    time.sleep(5)
     button_create = driver.find_element(By.XPATH, '//*[@id="addForm"]/div/input')
     button_create.click()
-    datetime_before_save = driver.find_element(By.XPATH, '//*[@id="last_edited"]/i')
-    datetime_before_save_result = datetime_before_save.text
     button_save_map = driver.find_element(By.XPATH, '//*[@id="btn_save_map"]')
     button_save_map.click()
     time.sleep(2)
     pyautogui.FAILSAFE = False
     pyautogui.moveTo(1100, 230)
     pyautogui.click()
-    time.sleep(12)
-    datetime_after_save = driver.find_element(By.XPATH, '//*[@id="last_edited"]/i')
-    datetime_after_save_result = datetime_after_save.text
-    result = [datetime_before_save_result, datetime_after_save_result]
-
-    return result
+    pyautogui.click()
+    time.sleep(20)
 
 
 
 class AuthenticationTestCase(TestCase):
 
     def test_1_login_correct(self):
-        correct_username = "a_andrusyk-itssv@kw.com"
-        correct_password = "Components12!"
+        correct_username = "....."
+        correct_password = "....."
+        expected = "Вихід"
         actual = login_selenium(correct_username, correct_password)
-        self.assertNotEqual(actual[1], actual[0])
-
-    def test_2_login_correct(self):
-        correct_username = "-------"
-        correct_password = "-------"
-        actual = login_selenium(correct_username, correct_password)
-        self.assertNotEqual(actual[1], actual[0])
+        self.assertEqual(actual, expected)
 
 
 
