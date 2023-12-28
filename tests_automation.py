@@ -1,0 +1,196 @@
+import time
+from unittest import TestCase
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service as ChromeService
+import pyautogui
+from selenium.webdriver.support.ui import Select
+from value_provider import ValueProvider
+
+GOOGLE_USER = '//*[@id="identifierId"]'
+LOGIN_BTN = '//*[@id="nav-home"]/div/table/tbody/tr[2]/td/div/input'
+NEXT_BTN = '//*[@id="identifierNext"]/div/button'
+NEXT_BTN_2 = '//*[@id="passwordNext"]/div/button'
+PASSWORD_INPUT = '//*[@id="password"]/div[1]/div/div[1]/input'
+SOURCE_ID = '//*[@id="sources"]'
+APP_SOURCE_BTN = '//*[@id="applySource"]'
+IMPLIS_LINK = '//a[text()="Multiple Listings Services"]'
+METADATA_SELECT = '//*[@id="metadataSelect"]'
+RULE_FIELD = '//*[@id="rulesAutocomplete"]'
+RULE_SELECTOR = '//*[@id="foo"]'
+RULE_CREATE_BTN = '//*[@id="addForm"]/div/input'
+IS_SHORT_SALE_RULE = "#nav-home > div > table > tbody > tr.master_schema.kw_listing.is_short_sale > td:nth-child(4) > div > span"
+IS_FORECLOSURE_RULE = "#nav-home > div > table > tbody > tr.master_schema.kw_listing.is_foreclosure > td:nth-child(4) > div > span"
+IS_SHORT_SALE_MAPPER = "#nav-home > div > table > tbody > tr.master_schema.kw_listing.is_short_sale > td:nth-child(2) > div > span"
+IS_FORECLOSURE_MAPPER = "#nav-home > div > table > tbody > tr.master_schema.kw_listing.is_foreclosure > td:nth-child(2) > div > span"
+MAPPER = "#foo"
+MAPPER_JSON_PATH = "#jsonform-3-elt-json_path"
+MAPPER_JSON_PATH2 = "#jsonform-5-elt-json_path"
+MAPPER_CREATE_BTN = "#addForm > div > input"
+FALSE_COST_IS_SHORT_SALE = "#listing_enhance_is_short_sale__0"
+FALSE_COST_IS_FORECLOSURE = "#listing_enhance_is_foreclosure__0"
+DEL_BTN_COST_1 = "#jsonform-11-elt-counter-12"
+DEL_BTN_COST_2 = "#jsonform-13-elt-counter-14"
+DATE_TIME_BEFORE_SAVE = '//*[@id="last_edited"]/i'
+SAVE_MAP_BTN = '//*[@id="btn_save_map"]'
+DATE_TIME_AFTER_SAVE = '//*[@id="last_edited"]/i'
+IMPLIS_WAIT_MAP = '#listing_mapper_mls_key__0'
+
+
+def slp_automation_mapp(username, password, source):
+    n = 2
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
+    driver.get("https://stage-slp.data.kw.com/login")
+    login_btn = driver.find_element(By.XPATH, LOGIN_BTN)
+    time.sleep(0)
+    login_btn.click()
+    driver.implicitly_wait(30)
+    google_login_username = driver.find_element(By.XPATH, GOOGLE_USER)
+    google_login_username.send_keys(username)
+    time.sleep(n)
+    next_button = driver.find_element(By.XPATH, NEXT_BTN)
+    next_button.click()
+    driver.implicitly_wait(30)
+    google_login_password = driver.find_element(By.XPATH, PASSWORD_INPUT)
+    google_login_password.send_keys(password)
+    next_login = driver.find_element(By.XPATH, NEXT_BTN_2)
+    next_login.click()
+    time.sleep(4)
+    driver.maximize_window()
+    driver.implicitly_wait(30)
+    select_element = driver.find_element(By.XPATH, SOURCE_ID)
+    select = Select(select_element)
+    select.select_by_value(source)  # source id
+    driver.implicitly_wait(30)
+    apply_source_button = driver.find_element(By.XPATH, APP_SOURCE_BTN)
+    apply_source_button.click()
+    driver.implicitly_wait(60)
+    driver.find_element(By.XPATH, IMPLIS_LINK)
+    driver.implicitly_wait(10)
+    select_element_type = driver.find_element(By.XPATH, METADATA_SELECT)
+    select_el = Select(select_element_type)
+    select_el.select_by_index(1)  # class id from 1
+    driver.implicitly_wait(30)
+    driver.find_element(By.CSS_SELECTOR, IMPLIS_WAIT_MAP)
+
+    # mapping the mapper is_short_sale filed
+    is_short_sale_mapper = driver.find_element(By.CSS_SELECTOR, IS_SHORT_SALE_MAPPER)
+    is_short_sale_mapper.click()
+    time.sleep(2)
+    select_element_mapper = driver.find_element(By.CSS_SELECTOR, MAPPER)
+    select_vp = Select(select_element_mapper)
+    select_vp.select_by_index(6)  # mapper id from 0
+    time.sleep(2)
+    json_mapper_path = driver.find_element(By.CSS_SELECTOR, MAPPER_JSON_PATH)
+    json_mapper_path.send_keys("SpecialListingConditions")
+    time.sleep(2) #---
+    try:
+        driver.find_element(By.XPATH, "/html/body/ul[2]/li/div")
+    except Exception as e:
+        return ["metadata issue!", "metadata issue!"]
+    mapper_create_btn = driver.find_element(By.CSS_SELECTOR, MAPPER_CREATE_BTN)
+    time.sleep(1)
+    mapper_create_btn.click()
+    time.sleep(10)
+
+    # mapping the mapper is_foreclosure filed
+    is_foreclosure_mapper = driver.find_element(By.CSS_SELECTOR, IS_FORECLOSURE_MAPPER)
+    is_foreclosure_mapper.click()
+    time.sleep(2)
+    select_element_mapper = driver.find_element(By.CSS_SELECTOR, MAPPER)
+    select_vp = Select(select_element_mapper)
+    select_vp.select_by_index(6)  # mapper id from 0
+    time.sleep(2)
+    json_mapper_path = driver.find_element(By.CSS_SELECTOR, MAPPER_JSON_PATH2)
+    json_mapper_path.send_keys("SpecialListingConditions")
+    time.sleep(2)
+    mapper_create_btn = driver.find_element(By.CSS_SELECTOR, MAPPER_CREATE_BTN)
+    time.sleep(1)
+    mapper_create_btn.click()
+    time.sleep(2)
+    driver.implicitly_wait(30)
+
+    # mapping the rule Is_Short_Sale
+    is_short_sale = driver.find_element(By.CSS_SELECTOR, IS_SHORT_SALE_RULE)
+    is_short_sale.click()
+    driver.implicitly_wait(30)
+    listing_rule = driver.find_element(By.XPATH, RULE_FIELD)
+    listing_rule.click()
+    driver.implicitly_wait(30)
+    select_element_rule = driver.find_element(By.XPATH, RULE_SELECTOR)
+    select_rule = Select(select_element_rule)
+    select_rule.select_by_index(413)  # rule id from 0
+    driver.implicitly_wait(30)
+    button_create = driver.find_element(By.XPATH, RULE_CREATE_BTN)
+    button_create.click()
+    driver.implicitly_wait(30)
+
+    # mapping the rule Is_Foreclosure
+    is_foreclosure = driver.find_element(By.CSS_SELECTOR, IS_FORECLOSURE_RULE)
+    is_foreclosure.click()
+    driver.implicitly_wait(30)
+    listing_rule = driver.find_element(By.XPATH, RULE_FIELD)
+    listing_rule.click()
+    driver.implicitly_wait(30)
+    select_element_rule = driver.find_element(By.XPATH, RULE_SELECTOR)
+    select_rule = Select(select_element_rule)
+    select_rule.select_by_index(412)  # rule id from 0
+    driver.implicitly_wait(30)
+    button_create = driver.find_element(By.XPATH, RULE_CREATE_BTN)
+    button_create.click()
+    time.sleep(2)
+
+    # removing False constanta for is_foreclosure field
+    is_foreclosure_const = driver.find_element(By.CSS_SELECTOR, FALSE_COST_IS_FORECLOSURE)
+    is_foreclosure_const.click()
+    time.sleep(2)
+    del_btn_cost = driver.find_element(By.CSS_SELECTOR, DEL_BTN_COST_1)
+    del_btn_cost.click()
+
+    # removing False constanta for is_short_sale field
+    is_foreclosure_const = driver.find_element(By.CSS_SELECTOR, FALSE_COST_IS_SHORT_SALE)
+    is_foreclosure_const.click()
+    time.sleep(2)
+    del_btn_cost = driver.find_element(By.CSS_SELECTOR, DEL_BTN_COST_2)
+    del_btn_cost.click()
+
+    datetime_before_save = driver.find_element(By.XPATH, DATE_TIME_BEFORE_SAVE)
+    datetime_before_save_result = datetime_before_save.text
+    button_save_map = driver.find_element(By.XPATH, SAVE_MAP_BTN)
+    button_save_map.click()
+    time.sleep(2)
+    pyautogui.FAILSAFE = False
+    pyautogui.moveTo(1100, 230)
+    pyautogui.click()
+    time.sleep(30)
+    datetime_after_save = driver.find_element(By.XPATH, DATE_TIME_AFTER_SAVE)
+    datetime_after_save_result = datetime_after_save.text
+    result = [datetime_before_save_result, datetime_after_save_result]
+    return result
+
+
+class AuthenticationTestCase(TestCase):
+
+    def test_slp_automation_mapp(self):
+        sources = ValueProvider.get_list_of_sources()
+        username = ValueProvider.get_email()
+        password = ValueProvider.get_password()
+        successfully_mapped = []
+        wrong_mapped = []
+        for source in sources:
+            with self.subTest(source=source):
+                try:
+                    actual = slp_automation_mapp(username, password, source)
+                    self.assertNotEqual(actual[1], actual[0])
+                    successfully_mapped.append(source)
+                except AssertionError as e:
+                    wrong_mapped.append(source)
+                    print(f"AssertionError in test for source {source}: {str(e)}")
+                    # Log the failure or take specific actions for the failed test
+                except Exception as e:
+                    wrong_mapped.append(source)
+                    print(f"Error in test for source {source}: {str(e)}")
+                    # Log the error or take specific actions for unexpected errors
+        print(f"The following sources were mapped successfully {successfully_mapped}")
+        print(f"There are issues with mapping in sources {wrong_mapped}")
