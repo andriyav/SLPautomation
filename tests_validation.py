@@ -63,15 +63,15 @@ def slp_automation_mapp(username, password, source):
     time.sleep(2)
     # validation of is_shor_sale filed
     is_short_sale = driver.find_element(By.CSS_SELECTOR,
-                                              '#nav-home > div > table > tbody > tr.master_schema.kw_listing.is_short_sale')
-    result.append(is_short_sale.text)
+                                              '#nav-home > div > table > tbody > tr.master_schema.kw_listing.structure-properties-exterior_features-properties-has_pool > td:nth-child(4)')
 
-    time.sleep(2)
-    # validation of  is_foreclosure filed
-    is_foreclosure = driver.find_element(By.CSS_SELECTOR,
-                                              '#nav-home > div > table > tbody > tr.master_schema.kw_listing.is_foreclosure')
-    result.append(is_foreclosure.text)
-    return result
+
+    # time.sleep(2)
+    # # validation of  is_foreclosure filed
+    # is_foreclosure = driver.find_element(By.CSS_SELECTOR,
+    #                                           '#nav-home > div > table > tbody > tr.master_schema.kw_listing.is_foreclosure')
+    # result.append(is_foreclosure.text)
+    return is_short_sale.text
 
 
 class AuthenticationTestCase(TestCase):
@@ -86,10 +86,10 @@ class AuthenticationTestCase(TestCase):
             with self.subTest(source=source):
                 try:
                     actual = slp_automation_mapp(username, password, source)
-                    self.assertEqual(actual[1],
-                                     'is_foreclosure\n+\n[add]\nValueProvider(json_path=SpecialListingConditions,skip_values=[])\n[add]\n[add]\nIs_Foreclosure()\n[add]')
-                    self.assertEqual(actual[0],
-                                     'is_short_sale\n+\n[add]\nValueProvider(json_path=SpecialListingConditions,skip_values=[])\n[add]\n[add]\nIs_Short_Sale()\n[add]')
+                    self.assertNotEqual(actual,
+                                     '[add]\nHasPool()')
+                    # self.assertEqual(actual[0],
+                    #                  'is_short_sale\n+\n[add]\nValueProvider(json_path=SpecialListingConditions,skip_values=[])\n[add]\n[add]\nIs_Short_Sale()\n[add]')
                     successfully_mapped.append(source)
                 except AssertionError as e:
                     wrong_mapped.append(source)

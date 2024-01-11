@@ -2,11 +2,13 @@ import time
 from unittest import TestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service as ChromeService
 import pyautogui
 from selenium.webdriver.support.ui import Select
 from value_provider import ValueProvider
+from selenium.webdriver.support import expected_conditions as EC
 
 GOOGLE_USER = '//*[@id="identifierId"]'
 LOGIN_BTN = '//*[@id="nav-home"]/div/table/tbody/tr[2]/td/div/input'
@@ -70,16 +72,16 @@ def get_rule_selector():
 
 def slp_automation_mapp(username, password, source):
     global mapper
-    n = 2
+    zoom_level = 0.7
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
     driver.get("https://stage-slp.data.kw.com/login")
+
     login_btn = driver.find_element(By.XPATH, LOGIN_BTN)
-    time.sleep(0)
     login_btn.click()
     driver.implicitly_wait(30)
     google_login_username = driver.find_element(By.XPATH, GOOGLE_USER)
     google_login_username.send_keys(username)
-    time.sleep(n)
+    time.sleep(3)
     next_button = driver.find_element(By.XPATH, NEXT_BTN)
     next_button.click()
     driver.implicitly_wait(30)
@@ -87,7 +89,7 @@ def slp_automation_mapp(username, password, source):
     google_login_password.send_keys(password)
     next_login = driver.find_element(By.XPATH, NEXT_BTN_2)
     next_login.click()
-    time.sleep(4)
+    time.sleep(20)
     driver.maximize_window()
     driver.implicitly_wait(30)
     select_element = driver.find_element(By.XPATH, SOURCE_ID)
@@ -105,26 +107,36 @@ def slp_automation_mapp(username, password, source):
     driver.implicitly_wait(30)
 
     driver.find_element(By.CSS_SELECTOR, IMPLIS_WAIT_MAP)
-
+    # driver.execute_script(f"document.body.style.zoom = '{zoom_level}';")
     configs = ValueProvider.get_mapping_configuration()
     time.sleep(2)
-    n = 3
-    for config in configs:
+    n = 0
+    timeout = 10
+    wait = WebDriverWait(driver, timeout)
 
+    for config in configs:
+        mapper = config.get("field")
         if config.get("MappersProvider") is not None:
-            mapper = config.get("field")
-            driver.find_element(By.CSS_SELECTOR, f"#nav-home > div > table > tbody > tr.master_schema.kw_listing.required.{mapper} > td:nth-child(2) > div > span").click()
-            print(config["MappersProvider"])
-            time.sleep(4)
+            driver.implicitly_wait(30)
+            map0 = driver.find_element(By.CSS_SELECTOR, f"#nav-home > div > table > tbody > tr.master_schema.kw_listing.{mapper}")
+            scroll_script = "arguments[0].scrollIntoView({behavior: 'auto', block: 'center', inline: 'center'});"
+            driver.execute_script(scroll_script, map0)
+            map = driver.find_element(By.CSS_SELECTOR, f"#nav-home > div > table > tbody > tr.master_schema.kw_listing.{mapper} > td:nth-child(2) > div > span")
+            element_loc = (By.CSS_SELECTOR, f"#nav-home > div > table > tbody > tr.master_schema.kw_listing.{mapper} > td:nth-child(2) > div > span")
+            wait.until(EC.element_to_be_clickable(element_loc))
+            map.click()
+            driver.implicitly_wait(30)
             select_element_mapper = driver.find_element(By.CSS_SELECTOR, "#foo")
             select_vp = Select(select_element_mapper)
             select_vp.select_by_index(config.get("MappersProvider"))  # mapper id from 0
-            time.sleep(2)
-            json_mapper_path = driver.find_element(By.CSS_SELECTOR, f"#jsonform-{n}-elt-json_path")
-            n += 2
-            time.sleep(2)
+            time.sleep(1)
+            n += 1
+            print('MappersProvider')
+            json_mapper_path = driver.find_element(By.XPATH, "/ html / body / div[3] / div / div / div[2] / div[2] / form / div / div[2] / div / input")
+
+            time.sleep(1)
             json_mapper_path.send_keys(config.get("Metadata"))
-            time.sleep(2)
+            time.sleep(1)
             try:
                 driver.find_element(By.XPATH, "/html/body/ul[2]/li/div")
             except Exception as e:
@@ -135,18 +147,42 @@ def slp_automation_mapp(username, password, source):
             time.sleep(3)
 
         if config.get("Rules") is not None:
-            driver.find_element(By.CSS_SELECTOR, f"#nav-home > div > table > tbody > tr.master_schema.kw_listing.required.{mapper} > td:nth-child(4) > div > span").click()
-            time.sleep(2)
+            driver.find_element(By.CSS_SELECTOR, f"#nav-home > div > table > tbody > tr.master_schema.kw_listing.{mapper} > td:nth-child(4) > div > span").click()
+            time.sleep(1)
             select_element_rule = driver.find_element(By.XPATH, RULE_SELECTOR)
             select_rule = Select(select_element_rule)
             select_rule.select_by_index(config.get("Rules"))  # rule id from 0
             driver.implicitly_wait(30)
-            time.sleep(3)
+            time.sleep(1)
             button_create = driver.find_element(By.XPATH, RULE_CREATE_BTN)
-            n += 3
+            n += 1
+            print('Rules')
             button_create.click()
-            time.sleep(5)
+            time.sleep(1)
 
+        if config.get("Enhancers") is not None:
+            mapper = config.get("field")
+            sel = driver.find_element(By.CSS_SELECTOR,
+                                f"#nav-home > div > table > tbody > tr.master_schema.kw_listing.{mapper} > td:nth-child(5) > div > span")
+            time.sleep(2)
+            sel.click()
+            time.sleep(2)
+            select_element_mapper = driver.find_element(By.CSS_SELECTOR, "#foo")
+            select_vp = Select(select_element_mapper)
+            select_vp.select_by_index(config.get("Enhancers"))  # mapper id from 0
+            time.sleep(2)
+            n += 1 ##jsonform-11
+            json_mapper_path = driver.find_element(By.XPATH, "/html/body/div[3]/div/div/div[2]/div[2]/form/div/div[2]/div/input")
+            time.sleep(2)
+            json_mapper_path.send_keys(config.get("Const"))
+            time.sleep(2)
+            mapper_create_btn = driver.find_element(By.CSS_SELECTOR, "#addForm > div > input")
+            time.sleep(2)
+            mapper_create_btn.click()
+            pyautogui.moveTo(1100, 230)
+            pyautogui.click()
+            time.sleep(15)
+            print('Enhancers')
 
 
 
