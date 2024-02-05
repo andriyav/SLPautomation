@@ -21,13 +21,13 @@ RULE_FIELD = '//*[@id="rulesAutocomplete"]'
 RULE_SELECTOR = '//*[@id="foo"]'
 RULE_CREATE_BTN = '//*[@id="addForm"]/div/input'
 IMPLIS_WAIT_MAP = '#listing_mapper_mls_key__0'
-
+META = (By.ID, "metadataSelect")
 
 def slp_automation_mapp(username, password, source):
     result = []
     n = 2
     driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
-    driver.get("https://stage-slp.data.kw.com/login")
+    driver.get("https://prod-slp.data.kw.com/login")
     login_btn = driver.find_element(By.XPATH, LOGIN_BTN)
     time.sleep(0)
     login_btn.click()
@@ -54,7 +54,7 @@ def slp_automation_mapp(username, password, source):
     driver.implicitly_wait(60)
     driver.find_element(By.XPATH, IMPLIS_LINK)
     driver.implicitly_wait(10)
-    select_element_type = driver.find_element(By.XPATH, METADATA_SELECT)
+    select_element_type = driver.find_element(*META)
     select_el = Select(select_element_type)
     select_el.select_by_index(1)  # class id from 1
     driver.implicitly_wait(30)
@@ -63,15 +63,15 @@ def slp_automation_mapp(username, password, source):
     time.sleep(2)
     # validation of is_shor_sale filed
     is_short_sale = driver.find_element(By.CSS_SELECTOR,
-                                              '#nav-home > div > table > tbody > tr.master_schema.kw_listing.structure-properties-exterior_features-properties-has_pool > td:nth-child(4)')
+                                        '#nav-home > div > table > tbody > tr.master_schema.kw_listing.is_short_sale')
+    result.append(is_short_sale.text)
+    time.sleep(2)
+    # validation of  is_foreclosure filed
+    is_foreclosure = driver.find_element(By.CSS_SELECTOR,
+                                              '#nav-home > div > table > tbody > tr.master_schema.kw_listing.is_foreclosure')
+    result.append(is_foreclosure.text)
 
-
-    # time.sleep(2)
-    # # validation of  is_foreclosure filed
-    # is_foreclosure = driver.find_element(By.CSS_SELECTOR,
-    #                                           '#nav-home > div > table > tbody > tr.master_schema.kw_listing.is_foreclosure')
-    # result.append(is_foreclosure.text)
-    return is_short_sale.text
+    return result
 
 
 class AuthenticationTestCase(TestCase):
@@ -86,10 +86,9 @@ class AuthenticationTestCase(TestCase):
             with self.subTest(source=source):
                 try:
                     actual = slp_automation_mapp(username, password, source)
-                    self.assertNotEqual(actual,
-                                     '[add]\nHasPool()')
-                    # self.assertEqual(actual[0],
-                    #                  'is_short_sale\n+\n[add]\nValueProvider(json_path=SpecialListingConditions,skip_values=[])\n[add]\n[add]\nIs_Short_Sale()\n[add]')
+                    # self.assertEqual(actual, 'lease_price\n+\n[add]\nCreateObjectMapper(json_path={"price":"ListPrice","type":"PropertyType"},skip_values=[])\n[add]\n[add]\nLeasePrice()\n[add]')
+                    self.assertEqual(actual[0],
+                                      'is_short_sale\n+\n[add]\nValueProvider(json_path=SpecialListingConditions,skip_values=[])\n[add]\n[add]\nIs_Short_Sale()\n[add]')
                     successfully_mapped.append(source)
                 except AssertionError as e:
                     wrong_mapped.append(source)
